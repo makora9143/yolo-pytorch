@@ -19,7 +19,8 @@ from model import YOLO
 import torchvision.models as models
 
 def train(args):
-    model = YOLO().cuda() if args.use_cuda else YOLO()
+    vgg = models.vgg16(True)
+    model = YOLO(vgg.features).cuda() if args.use_cuda else YOLO()
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
@@ -31,3 +32,6 @@ def train(args):
             l.backward()
             optimizer.step()
             print(l.data[0])
+
+def pretrain():
+    pass
