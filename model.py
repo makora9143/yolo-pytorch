@@ -87,13 +87,15 @@ class YOLO(nn.Module):
         super(YOLO, self).__init__()
         C = 1
 
+        ch = 512
         if model is None:
+            ch = 1024
             model = DarkNet()
 
         self.features = model
 
         self.yolo = nn.Sequential(
-            nn.Conv2d(1024, 1024, 3, padding=1),
+            nn.Conv2d(ch, 1024, 3, padding=1),
             nn.LeakyReLU(0.1),
             nn.Conv2d(1024, 1024, 3, stride=2, padding=1),
             nn.LeakyReLU(0.1),
@@ -106,6 +108,7 @@ class YOLO(nn.Module):
 
         self.flatten = Flatten()
         self.fc1 = nn.Linear(math.ceil(input_size[0]/64) * math.ceil(input_size[1] / 64) *1024, 4096)
+        self.dropout = nn.Dropout()
         self.fc2 = nn.Linear(4096, 7*7*(10 + C))
 
     def forward(self, x):

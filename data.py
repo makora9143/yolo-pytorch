@@ -92,7 +92,7 @@ def create_label(chunk):
         obj[1] = cx - np.floor(cx) # center x in each cell
         obj[2] = cy - np.floor(cy) # center x in each cell
 
-        obj += [int(np.floor(cy) * 7 + np.floor(cx))] # indexing cell[0, 49)
+        obj += [int(np.floor(cy) * S + np.floor(cx))] # indexing cell[0, 49)
 
     # each object: length: 6,
     # [label, center_x_in_cell, center_y_in_cell, w_in_image, h_in_image, cell_idx]
@@ -107,11 +107,14 @@ def create_label(chunk):
         class_probs[obj[5], :] = [0.] * C # no need?
         class_probs[obj[5], labels[obj[0]]] = 1.
 
-        confs[obj[5], :] = [1.] * B # for object confidence? -> the cell which contains object is 1 nor 0
+        # for object confidence? -> the cell which contains object is 1 nor 0
+        confs[obj[5], :] = [1.] * B 
 
-        coord[obj[5], :, :] = [obj[1:5]] * B # assign [center_x_in_cell, center_y_in_cell, w_in_image, h_in_image]
+        # assign [center_x_in_cell, center_y_in_cell, w_in_image, h_in_image]
+        coord[obj[5], :, :] = [obj[1:5]] * B 
 
-        proid[obj[5], :] = [1] * C # for 1_{i}^{obj} in paper eq.(3)
+        # for 1_{i}^{obj} in paper eq.(3)
+        proid[obj[5], :] = [1] * C
 
         # transform width and height to the scale of coordinates
         prear[obj[5], 0] = obj[1] - obj[3] ** 2 * 0.5 * S # x_left

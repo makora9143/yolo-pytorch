@@ -49,6 +49,7 @@ def loss(y_pred, y_true, S=7, B=2, C=1, use_cuda=False):
     _proid = y_true['proid']
     _probs = y_true['class_probs']
 
+    # Extract the coordinate prediction from y_pred
     coords = y_pred[:, SS * (C + B):].contiguous().view(-1, SS, B, 4)
     wh = torch.pow(coords[:, :, :, 2:4], 2)
     area_pred = wh[:, :, :, 0] * wh[:, :, :, 1]
@@ -56,23 +57,26 @@ def loss(y_pred, y_true, S=7, B=2, C=1, use_cuda=False):
     floor = centers - (wh * 0.5)
     ceil = centers + (wh * 0.5)
 
+    # Calculate the intersection areas
     intersect_upleft = torch.max(floor, _upleft)
-    intersect_bottomright = torch.max(ceil, _bottomright)
+    intersect_bottomright = torch.min(ceil, _bottomright)
     intersect_wh = intersect_bottomright - intersect_upleft
     zeros = Variable(torch.zeros(batch_size, 49, 2, 2)).cuda() if use_cuda else Variable(torch.zeros(batch_size, 49, 2, 2))
     intersect_wh = torch.max(intersect_wh, zeros)
     intersect = intersect_wh[:, :, :, 0] * intersect_wh[:, :, :, 1]
-    iou = intersect / (_areas + area_pred - intersect)
 
+    # Calculate the best IOU, set 0.0 confidence for worse boxes
+    iou = intersect / (_areas + area_pred - intersect)
     best_box = torch.eq(iou, torch.max(iou, 2)[0].unsqueeze(2))
     confs = best_box.float() * _confs
 
+    # Take care of the weight terms
     conid = scale_noobject_conf * (1. - confs) + scale_object_conf * confs
     weight_coo = torch.cat(4 * [confs.unsqueeze(-1)], 3)
     cooid = scale_coordinate * weight_coo
     proid = scale_class_prob * _proid
 
-
+    # Flatten 'em all
     probs = flatten(_probs)
     proid = flatten(proid)
     confs = flatten(confs)
