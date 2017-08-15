@@ -22,53 +22,53 @@ class DarkNet(nn.Module):
         self.net = nn.Sequential(
             # nn.Upsample(scale_factor=2),
             nn.Conv2d(3, 64, 7, stride=2, padding=3),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.MaxPool2d(2),
 
             nn.Conv2d(64, 192, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.MaxPool2d(2),
 
             nn.Conv2d(192, 128, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(128, 256, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(256, 256, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(256, 512, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.MaxPool2d(2),
 
             nn.Conv2d(512, 256, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(256, 512, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(512, 256, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(256, 512, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(512, 256, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(256, 512, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(512, 256, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(256, 512, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(512, 512, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(512, 1024, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.MaxPool2d(2),
 
             nn.Conv2d(1024, 512, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(512, 1024, 3, padding=1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(1024, 512, 1),
-            nn.LeakyReLU(0.1),
+            nn.LeakyReLU(0.1, inplace=True),
             nn.Conv2d(512, 1024, 3, padding=1),
-            nn.LeakyReLU(0.1)
+            nn.LeakyReLU(0.1, inplace=True)
         )
         if self.pretrain:
             self.fc = nn.Linear(1024, 1000)
@@ -90,7 +90,7 @@ class YOLO(nn.Module):
         if model is None:
             model = DarkNet()
 
-        self.darknet = model
+        self.features = model
 
         self.yolo = nn.Sequential(
             nn.Conv2d(1024, 1024, 3, padding=1),
@@ -109,7 +109,7 @@ class YOLO(nn.Module):
         self.fc2 = nn.Linear(4096, 7*7*(10 + C))
 
     def forward(self, x):
-        feature = self.darknet(x)
+        feature = self.features(x)
         output = self.yolo(feature)
         output = self.flatten(output)
         output = F.leaky_relu(self.fc1(output), 0.1)

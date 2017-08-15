@@ -19,8 +19,7 @@ from model import YOLO
 import torchvision.models as models
 
 def train(args):
-    m = models.resnet18(pretrained=True)
-    model = YOLO(m).cuda() if args.use_cuda else YOLO()
+    model = YOLO().cuda() if args.use_cuda else YOLO()
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
