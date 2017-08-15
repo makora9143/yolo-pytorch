@@ -17,7 +17,7 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 
 
-def loss(y_pred, y_true, S=7, B=2, C=1):
+def loss(y_pred, y_true, S=7, B=2, C=1, use_cuda=False):
     ''' Calculate the loss of YOLO model.
     args:
         y_pred: (Batch, 7 * 7 * 30)
@@ -59,7 +59,8 @@ def loss(y_pred, y_true, S=7, B=2, C=1):
     intersect_upleft = torch.max(floor, _upleft)
     intersect_bottomright = torch.max(ceil, _bottomright)
     intersect_wh = intersect_bottomright - intersect_upleft
-    intersect_wh = torch.max(intersect_wh, Variable(torch.zeros(batch_size, 49, 2, 2)))
+    zeros = Variable(torch.zeros(batch_size, 49, 2, 2)).cuda() if use_cuda else Variable(torch.zeros(batch_size, 49, 2, 2))
+    intersect_wh = torch.max(intersect_wh, zeros)
     intersect = intersect_wh[:, :, :, 0] * intersect_wh[:, :, :, 1]
     iou = intersect / (_areas + area_pred - intersect)
 

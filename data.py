@@ -154,7 +154,7 @@ def load_data(i):
     return [img, wh]
 
 
-def get_datas(idx):
+def get_datas(idx, use_cuda=False):
     x_batch = list()
     feed_batch = dict()
     for i in idx:
@@ -173,16 +173,22 @@ def get_datas(idx):
             feed_batch[key] = np.concatenate([
                 old_feed, [new]])
 
-    x_batch = torch.from_numpy(np.concatenate(x_batch, 0)).float()
-    feed_batch = {key: Variable(torch.from_numpy(feed_batch[key]).float())
-                  for key in feed_batch}
+    if use_cuda:
+        x_batch = Variable(torch.from_numpy(np.concatenate(x_batch, 0)).float()).cuda()
+        feed_batch = {key: Variable(torch.from_numpy(feed_batch[key]).float()).cuda()
+                      for key in feed_batch}
 
-    return Variable(x_batch), feed_batch
+    else:
+        x_batch = torch.from_numpy(np.concatenate(x_batch, 0)).float()
+        feed_batch = {key: Variable(torch.from_numpy(feed_batch[key]).float())
+                      for key in feed_batch}
+
+    return x_batch, feed_batch
 
 
-def train_batches(batch_size=1, train_size=6):
+def train_batches(batch_size=1, train_size=6, use_cuda=False):
     print('Dataset of {} instance(s) and batch size is {}'.format(train_size, batch_size))
     shuffle_idx = np.random.permutation(list(range(1, train_size + 1)))
     for i in range(train_size // batch_size):
-        yield get_datas(shuffle_idx[i*batch_size: (i+1)*batch_size])
+        yield get_datas(shuffle_idx[i*batch_size: (i+1)*batch_size], use_cuda)
 

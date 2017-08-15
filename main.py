@@ -12,10 +12,23 @@ from torch.autograd import Variable
 
 
 import argparse
+import train
 
 
 def main():
-    pass
+    parser = argparse.ArgumentParser(description='PyTorch YOLO')
+
+    parser.add_argument('--use_cuda', type=bool, default=False,
+                        help='use cuda or not')
+    parser.add_argument('--epochs', type=int, default=10,
+                        help='Epochs')
+    parser.add_argument('--batch_size', type=int, default=1,
+                        help='Batch size')
+    parser.add_argument('--lr', type=float, default=1e-3,
+                        help='Learning rate')
+
+    args = parser.parse_args()
+    train.train(args)
 
 
 

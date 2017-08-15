@@ -83,11 +83,14 @@ class DarkNet(nn.Module):
 
 
 class YOLO(nn.Module):
-    def __init__(self, input_size=(480, 640)):
+    def __init__(self, model=None, input_size=(480, 640)):
         super(YOLO, self).__init__()
         C = 1
 
-        self.darknet = DarkNet()
+        if model is None:
+            model = DarkNet()
+
+        self.darknet = model
 
         self.yolo = nn.Sequential(
             nn.Conv2d(1024, 1024, 3, padding=1),

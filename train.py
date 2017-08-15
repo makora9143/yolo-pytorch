@@ -8,21 +8,27 @@ from __future__ import absolute_import
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 from torch.autograd import Variable
 
 import data
 from loss import loss
 from model import YOLO
 
+
+import torchvision.models as models
+
 def train(args):
-    epochs = 3
-    batch_size = 2
+    m = models.resnet18(pretrained=True)
+    model = YOLO(m).cuda() if args.use_cuda else YOLO()
 
-    model = YOLO()
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    for epoch in range(epochs):
-        for x, y in data.train_batches(batch_size):
+    for epoch in range(args.epochs):
+        for x, y in data.train_batches(args.batch_size, use_cuda=args.use_cuda):
+            optimizer.zero_grad()
             y_pred = model(x)
-            l = loss(y_pred, y)
-            print(l.data[0])
+            l = loss(y_pred, y, use_cuda=args.use_cuda)
             l.backward()
+            optimizer.step()
+            print(l.data[0])
