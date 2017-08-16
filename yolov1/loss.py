@@ -61,7 +61,7 @@ def loss(y_pred, y_true, S=7, B=2, C=1, use_cuda=False):
     intersect_upleft = torch.max(floor, _upleft)
     intersect_bottomright = torch.min(ceil, _bottomright)
     intersect_wh = intersect_bottomright - intersect_upleft
-    zeros = Variable(torch.zeros(batch_size, 49, 2, 2)).cuda() if use_cuda else Variable(torch.zeros(batch_size, 49, 2, 2))
+    zeros = Variable(torch.zeros(batch_size, SS, B, 2)).cuda() if use_cuda else Variable(torch.zeros(batch_size, 49, B, 2))
     intersect_wh = torch.max(intersect_wh, zeros)
     intersect = intersect_wh[:, :, :, 0] * intersect_wh[:, :, :, 1]
 
@@ -94,4 +94,17 @@ def loss(y_pred, y_true, S=7, B=2, C=1, use_cuda=False):
 
 def flatten(x):
     return x.view(x.size(0), -1)
+
+def convert2viz(y_pred, C=1, B=2, S=7):
+    SS = S * S
+    coords = y_pred[:, SS * (C + B):].contiguous().view(-1, SS, B, 4)
+    wh = torch.pow(coords[:, :, :, 2:4], 2)
+    xy = coords[:, :, :, 0:2]
+    upperleft = xy - wh / 2
+    bottomright = xy + wh / 2
+    classes = y_pred[:, :SS * C].contiguous().view(-1, SS, C)
+    classes = classes.unsqueeze(2).repeat(1, 1, B, 1)
+    confs = y_pred[:, SS * C: SS * (C+B)].contiguous().view(-1, SS, B)
+
+    return upperleft.view(-1, SS*B, 2), bottomright.view(-1, SS*B, 2), classes.view(-1, SS*B, C), confs.view(-1, SS*B)
 

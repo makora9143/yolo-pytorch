@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
+import os
 import json
 from copy import deepcopy
 
@@ -75,8 +76,8 @@ def create_label(chunk):
     for obj in allobj:
         # center_x = 0.5 * (obj[1] + obj[3]) # (xmin + xmax) / 2
         # center_y = 0.5 * (obj[2] + obj[4]) # (ymin + ymax) / 2
-        center_x = obj[1] # (xmin + xmax) / 2
-        center_y = obj[2] # (ymin + ymax) / 2
+        center_x = obj[1] + obj[3] / 2# left_x + width/ 2
+        center_y = obj[2] + obj[4] / 2 # upper_y + height / 2
 
         cx = center_x / cell_x # rescale the center x to cell size
         cy = center_y / cell_y # rescale the center y to cell size
@@ -105,6 +106,7 @@ def create_label(chunk):
 
     for obj in allobj:
         class_probs[obj[5], :] = [0.] * C # no need?
+        if not obj[0] in labels: continue
         class_probs[obj[5], labels[obj[0]]] = 1.
 
         # for object confidence? -> the cell which contains object is 1 nor 0
@@ -144,9 +146,9 @@ def create_label(chunk):
 
 
 def load_data(i):
-    img = './data/{}.jpg'.format(i)
+    img = '../data/{}.jpg'.format(i)
 
-    with open('./data/annotations/{}.json'.format(i)) as f:
+    with open('../data/annotations/{}.json'.format(i)) as f:
         json_dict = json.load(f)
 
     wh = json_dict['image_w_h']
@@ -189,8 +191,8 @@ def get_datas(idx, use_cuda=False):
     return x_batch, feed_batch
 
 
-def train_batches(batch_size=1, train_size=6, use_cuda=False):
-    print('Dataset of {} instance(s) and batch size is {}'.format(train_size, batch_size))
+def train_batches(batch_size=1, use_cuda=False):
+    train_size = len(os.listdir('../data/annotations'))
     shuffle_idx = np.random.permutation(list(range(1, train_size + 1)))
     for i in range(train_size // batch_size):
         yield get_datas(shuffle_idx[i*batch_size: (i+1)*batch_size], use_cuda)
