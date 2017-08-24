@@ -14,6 +14,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
+import cv2
+
 import data
 from loss import loss, convert2viz
 from model import YOLO
@@ -71,7 +73,7 @@ def train_epoch(epoch, model, optimizer, args):
     print("Epoch: {}, Ave loss: {}".format(epoch, losses / i))
     return losses / i
 
-def test_epoch(model, use_cuda=False, jpg=None):
+def test_epoch(model, threshold, use_cuda=False, jpg=None):
     if jpg is None:
         x = torch.randn(1, 3, 480, 640)
     else:
@@ -85,10 +87,15 @@ def test_epoch(model, use_cuda=False, jpg=None):
 
     y = model(x)
     upperleft, bottomright, classes, confs = convert2viz(y)
+    result = cv2.imread(jpg)
 
+    for ul, br, cls, cfs in zip(upperleft, bottomright, classes, confs):
+        if cfs > threshold:
+            result = cv2.rectangle(result, ul, br, (0, 255, 0), 2)
+    cv2.imshow(jpg, result)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-def pretrain():
-    pass
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
